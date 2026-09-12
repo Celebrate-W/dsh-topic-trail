@@ -1,0 +1,40 @@
+{
+  "name": "dsh-topic-trail",
+  "version": "0.1.0",
+  "description": "会话工作线索悬浮窗：用 DeepSeek 把用户与 AI 的会话实时提炼成话题（线索）与进度步骤，在 Web UI 中显示为可拖动的悬浮窗。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "topic",
+    "trail",
+    "overlay"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ]
+    }
+  }
+}
