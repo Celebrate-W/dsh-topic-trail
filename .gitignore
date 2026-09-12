@@ -1,0 +1,6 @@
+# 运行时数据（会话线索、配置、LLM 错误日志）——不含任何源码
+data/
+*.log
+.start-test.ps1
+.test-*.mjs
+.test-*.log
