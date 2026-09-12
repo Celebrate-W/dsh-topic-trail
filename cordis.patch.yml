@@ -1,0 +1,18 @@
+# dsh-topic-trail bundle layer — 会话工作线索悬浮窗。
+#
+# summarize: 话题总结方式
+#   - auto（默认）：优先用 DeepSeek LLM 总结，失败自动回退规则模式
+#   - llm：强制 LLM 总结
+#   - rule：仅规则模式（不调用模型，零成本）
+# provider / model: 默认固定用 dsh 官方 DeepSeek 路由（与 web 设置一致），留空则自动探测
+# followSession: 切换对话时，任务线索自动跟随到该对话（工作区级 → 该对话所属工作区；对话级 → 该对话）。可在设置页「任务线索」里开关（持久化到 data/topic-trail/config.json）。
+- insert:
+    - id: dsh-topic-trail
+      name: dsh-topic-trail
+      config:
+        summarize: auto
+        pollMs: 3000
+        bufferSize: 40
+        provider: deepseek-official
+        model: deepseek-v4-flash
+        followSession: true
