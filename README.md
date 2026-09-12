@@ -1,101 +1,218 @@
 # dsh-topic-trail — 会话工作线索悬浮窗
 
-给 DeepSeek Harness（dsh）的 Web UI 加一个**可拖动的悬浮窗**：实时把用户与 AI 正在做的工作提炼成「话题（线索）」和「进度步骤」，点开话题能看到一步一步都干了什么。数据来自 dsh 正在用的那套 DeepSeek API（走 `ctx.llm`，即 web 页面里配置的模型与凭据），用专门的话题总结提示词做语义提炼。
+> 你是不是也这样：用 dsh 写东西想到哪写到哪，写完回头一看——刚才到底干了啥？这个插件就是解决这个问题的。
 
-## 效果
+给 DeepSeek Harness（dsh）的 Web UI 加一个**可拖动的悬浮窗**，实时把你和 AI 正在做的工作提炼成「话题（线索）」和「进度步骤」。点开话题能看到一步一步都干了什么，跨会话、跨工作区的工作脉络一目了然。
 
-- 右下角悬浮窗，头部可拖动，**收起为圆形小球后同样可拖动**（拖动时不会误触展开）；位置记忆在 `localStorage`。
-- **右键开始总结**：在导航下拉里右键「全部工作区 / 任意工作区 / 任意会话」，或在任意线索卡片上右键，弹出「开始总结线索」菜单：
-  - 右键工作区 → 批量总结该工作区下所有会话（未导入的会自动先导入，后台 2 路并发跑 LLM，响应立即返回并 toast 提示进度）；
-  - 右键会话 → 总结该会话；
-  - 右键全部工作区 → 总结所有工作区全部会话；
-  - 右键合并线索卡片 → 总结它的全部来源会话。
-- 悬浮窗里是一张张话题卡片：标题、一句话概括、状态（进行中/已完成）、步骤数、更新时间。
-- **悬停动效展开**：每个线索默认只显示标题，鼠标移上去后描述（一句话概括 + 步骤数/AI 总结徽标/时间）平滑展开；点击卡片才展开步骤列表（会话视图）或来源会话（合并线索视图），两级交互互不干扰。
-- **界面仿 dsh**：毛玻璃面板、圆角卡片、跟随 dsh 的深色设计语言（`#151517` 底、`#F9FAFB/#ADB2B8` 文字、强调蓝渐变、用户/助手/工具/推理四色步骤侧条、AI 总结徽标），头部带 ↻ 手动刷新与「—」收起按钮，全部动画 0.2–0.3s。
-- 点开话题展开步骤列表：用户要求 / AI 做了什么 / 工具调用（含成功/失败/执行中）按时间顺序排列。
-- **选择旧对话导入**：头部下拉选择任意会话（含历史会话），对还没有线索的历史会话点「导入此会话」，插件会从 dsh 的会话日志（`ctx.sessionQuery`）回溯重建话题与进度，并用 DeepSeek 提炼。
-- **工作区线索网络（三级）**：dsh 会话按「工作目录」分组存放，插件据此组织成
-  `全部工作区 → 工作区 → 会话` 三级导航：
-  - 最顶层「全部工作区」：跨工作区的相似线索合并到一个收起栏；
-  - 每个「工作区」：该工作目录下所有会话的相似话题自动合并成工作区线索（可展开下钻到来源会话）；
-  - 每个「会话」：原始话题 + 步骤。
-  - **悬停提示**：鼠标悬停任意线索，显示它来自哪个工作区 / 哪个会话；点开合并线索可下钻到对应会话并展开该话题。
-- 每 3 秒自动刷新；会话中途和之后都能随时查看「刚才干了什么」。
+总结走 dsh 已配置的 DeepSeek 路由（`ctx.llm`），不需要额外配 API key。
+
+---
+
+## 解决的痛点
+
+| 痛点 | 插件怎么解决 |
+|---|---|
+| 想到哪写到哪，写完不知道自己干了啥 | 实时把会话活动提炼成话题+步骤，随时回看 |
+| 长对话里找不到之前的某个决策 | 步骤按时间排列，**点击步骤直接跳转到对应对话位置**并自动滚动 |
+| 多会话切换后忘记之前的进度 | 三级线索网络：全部工作区 → 工作区 → 会话，相似话题自动合并 |
+| 工作区之间的工作脉络看不清 | 工作区级线索由下属会话的相似话题合并而成，可展开下钻到每个来源会话 |
+| 手动整理太麻烦 | 右键「重新生成线索」一键总结；首次打开自动导入所有未归档会话 |
+| 线索重复/拆分不合理 | 同一对话范围内**拖拽合并**，AI 自动找共同点、整理步骤和时间关系 |
+
+---
+
+## 特色功能
+
+- **悬浮窗可拖动**：头部拖动面板，收起为圆形小球后也能拖动，位置记忆在 localStorage。
+- **三级线索网络**：
+  - **全部工作区**：跨工作区的相似线索合并到收起栏；
+  - **工作区**：该工作区下所有会话的相似话题自动合并，可展开下钻到来源会话；
+  - **会话**：原始话题 + 步骤明细。
+  - 鼠标悬停任意线索，显示它来自哪个工作区/会话。
+- **悬停动效展开**：每个线索默认只显示标题，鼠标移上去后描述平滑展开（0.5s），点击才展开步骤列表。
+- **右键重新生成线索**：在导航下拉里右键全部工作区/工作区/会话，或在线索卡片上右键，触发 LLM 重新总结选中范围。
+- **步骤点击跳转**：点开话题后点任意步骤，自动打开对应对话并滚动到该步骤发生的位置（多次重试 + 比例滚动兜底）。
+- **拖拽合并线索**：同一对话范围内把一条线索拖到另一条上，AI 寻找共同点、合并步骤并整理时间关系；合并后的线索锁定，不会被后续总结覆盖。
+- **从修改中学习**：你手动改过的线索会记录到 modificationLog，下次 LLM 总结时参考你的偏好。
+- **设置页集成**：dsh 设置里新增「任务线索」栏，可开关插件、切换对话时自动跟随、开关学习功能、调整总结方式和刷新间隔。
+- **首次自动导入**：第一次打开时后台慢慢加载所有未归档会话的线索，不截断线程。
+- **性能优化**：服务端快照缓存 + 前端 localStorage 秒开 + version 跳过重渲染 + 自适应轮询，不卡界面。
+- **仿 dsh 深色 UI**：毛玻璃面板、圆角卡片、用户/助手/工具/推理四色步骤侧条，和 dsh 原生风格一致。
+
+---
 
 ## 安装
 
-在 `harness-v2` 目录下执行（使用仓库内 pnpm）：
+### 方法一：dsh plugin 命令（推荐）
+
+在 `harness-v2` 目录下执行：
 
 ```powershell
-# 先把仓库内 pnpm 加进 PATH
 $env:PATH = "C:\Users\d\.dsh\harness-v2\tools\node_modules\.bin;" + $env:PATH
 $env:DSH_HOME = "C:\Users\d\.dsh\harness-v2"
-
-dsh plugin --profile web add file:C:/Users/d/.dsh/harness-v2/plugins/dsh-topic-trail
+dsh plugin --profile web add file:C:/path/to/dsh-topic-trail
 ```
 
-然后重启 `dsh-web.cmd`。验证已进插件树：
+然后重启 dsh。
+
+### 方法二：丢给你的 AI 助手
+
+把这个仓库地址发给你的 AI 助手（比如豆包、Claude 等），说：
+
+> "帮我把 dsh-topic-trail 插件安装到我的 dsh 里，插件目录在 harness-v2/plugins/ 下，安装副本在 harness-v2/profiles/web/node_modules/ 下。"
+
+AI 助手会帮你完成下载、复制、同步和重启。
+
+### 验证
 
 ```powershell
-dsh --profile web --dump-config | Select-String -Pattern "topic-trail" -Context 1,2
+dsh --profile web --dump-config | Select-String -Pattern "topic-trail"
 ```
 
-## 配置（cordis.patch.yml）
+---
 
-| 配置项 | 默认 | 说明 |
-|---|---|---|
-| `summarize` | `auto` | `auto`：规则即时生成步骤 + turn 结束后用 DeepSeek LLM 总结替换（失败自动回退规则）；`llm`：只靠 LLM 总结；`rule`：纯规则、零模型调用 |
-| `provider` / `model` | 自动 | 留空时自动探测 dsh 已配置的 DeepSeek 路由与默认模型；也可显式指定，如 `deepseek` / `deepseek-chat` |
-| `pollMs` | 3000 | 前端刷新间隔（毫秒） |
-| `bufferSize` | 40 | 送入 LLM 总结的最近事件条数上限 |
+## 使用方法
 
-## 结构
+### 基本操作
+
+1. 打开 dsh Web UI，右下角出现「工作线索」悬浮窗。
+2. 拖动头部移动位置；点「—」收起为小球，点小球展开。
+3. 头部下拉选择查看范围：**全部工作区** / 某个**工作区** / 某个**会话**。
+4. 鼠标悬停线索卡片查看描述；点击卡片展开步骤列表。
+5. 点任意步骤 → 自动跳转到对应对话并滚动到发生位置。
+
+### 右键菜单
+
+- 右键导航里的工作区/会话 →「重新生成线索」：用 LLM 重新总结选中范围。
+- 右键线索卡片 → 重新生成该线索。
+
+### 拖拽合并
+
+1. 确保在**会话级**视图（工作区级不支持拖拽合并）。
+2. 按住一条线索拖到另一条线索上。
+3. AI 自动分析两条线索的共同点，合并步骤并整理时间顺序。
+4. 合并后的线索带 🔒 标记，不会被后续自动总结覆盖。
+
+### 设置
+
+dsh 设置 → 「任务线索」栏：
+
+| 选项 | 说明 |
+|---|---|
+| 启用插件 | 全局开关，关闭后悬浮窗不显示 |
+| 切换对话时跟随 | 切到新对话时自动把线索视图切到该对话（工作区级则切到该对话的工作区） |
+| 从修改中学习 | 记录你手动改的线索，下次总结时参考 |
+| 总结方式 | auto（规则+LLM）/ llm（纯LLM）/ rule（纯规则，零模型调用） |
+| 刷新间隔 | 前端轮询快照的间隔（毫秒） |
+
+---
+
+## 项目结构
 
 ```
 dsh-topic-trail/
 ├── package.json          # dsh.bundle.patch + dsh.client(web) 声明
-├── cordis.patch.yml      # 插件挂载层（含配置）
+├── cordis.patch.yml      # 插件挂载层 + 默认配置
 ├── lib/
-│   ├── index.js          # Host 半：session/event 监听、LLM 总结、webServer 路由、持久化
-│   └── client.js         # Client 半：shell.overlay 悬浮窗（ModuleLoader bundle 格式，零构建）
+│   ├── index.js          # Host 半：事件监听、LLM 总结、API 路由、持久化、工作区网络
+│   └── client.js         # Client 半：shell.overlay 悬浮窗（零构建，ModuleLoader bundle）
+├── .gitignore
 └── README.md
 ```
 
 ### 数据流
 
 ```
-dsh 会话事件（user/message · assistant/message · tool/call · tool/result · turn/end）
+dsh 会话事件（user/assistant/tool/turn-end）
         │  ctx.on('session/event')
         ▼
-Host 缓冲（每会话 ≤ bufferSize 条，持久化到 <DSH_HOME>/data/topic-trail/<sessionId>.json）
+Host 缓冲（每会话 ≤40 条，持久化到 data/topic-trail/<sessionId>.json）
         │  turn/end 后防抖 1.5s
         ▼
-DeepSeek LLM（ctx.llm.stream + 「话题总结 skill」提示词）→ 结构化 JSON 话题/步骤
-        │  失败 → 保持规则模式即时结果
+DeepSeek LLM（ctx.llm.stream + 话题总结提示词）→ 结构化 JSON 话题/步骤
+        │  失败 → 回退规则模式
         ▼
-GET /plugins/topic-trail/snapshot  ──轮询 3s──►  Client 悬浮窗（shell.overlay）
+GET /plugins/topic-trail/snapshot  ──轮询──►  Client 悬浮窗
 ```
 
-### Host 侧路由
+### Host 侧 API
 
-- `GET /plugins/topic-trail/snapshot` — 全部已提炼会话的话题/步骤快照 + 工作区线索网络（`workspaces.all` / `workspaces.byId`）
-- `GET /plugins/topic-trail/sessions` — 会话列表（来自 `ctx.sessionQuery`，含标题/是否有线索），供下拉选择
-- `POST /plugins/topic-trail/import` — 导入旧会话：从 dsh 会话日志重建话题/步骤（body: `{"sessionId":"..."}`，兼容 `session-<uuid>` 与裸 `<uuid>` 两种 id 格式）
-- `POST /plugins/topic-trail/summarize` — 手动触发 LLM 总结。body 支持：`{"sessionId":"..."}`（单会话）、`{"sessionIds":["...","..."]}`（多会话）、`{"workspaceId":"<工作区key>"}`（整个工作区，未导入会话自动先导入）或 `{"workspaceId":"__all__"}`（全部工作区）。批量总结为异步：响应立即返回 `{ok, targets, sessions}`，导入与 LLM 总结在后台 2 路并发推进。
+| 路由 | 方法 | 说明 |
+|---|---|---|
+| `/plugins/topic-trail/snapshot` | GET | 全部话题/步骤快照 + 工作区线索网络 + version |
+| `/plugins/topic-trail/sessions` | GET | 会话列表（含标题/是否有线索） |
+| `/plugins/topic-trail/config` | GET/POST | 读取/更新运行时配置 |
+| `/plugins/topic-trail/import` | POST | 导入旧会话，从日志重建话题 |
+| `/plugins/topic-trail/summarize` | POST | 手动触发 LLM 总结（异步，支持单会话/多会话/工作区/全部） |
+| `/plugins/topic-trail/merge` | POST | 拖拽合并两条线索（AI 找共同点） |
+
+---
+
+## 更改与更新
+
+### 修改源码后
+
+`lib/` 是源码，pnpm 对 `file:` 依赖是**复制安装**，改完必须同步到已安装副本：
+
+```powershell
+# 同步 host 和 client
+Copy-Item lib\*.js ..\..\profiles\web\node_modules\dsh-topic-trail\lib\ -Force
+```
+
+- 改 `lib/index.js`（host）→ **重启 dsh** 生效。
+- 改 `lib/client.js`（前端）→ **浏览器刷新**即可。
+
+### 数据文件
+
+运行时数据在 `harness-v2/data/topic-trail/`：
+- `<sessionId>.json` — 每个会话的线索、步骤、缓冲、修改日志
+- `config.json` — 运行时配置（设置页改动持久化到这里）
+- `llm-error.log` — LLM 总结失败日志
+
+这些**不要提交到 git**（已在 .gitignore 排除）。
+
+### 更新到新版本
+
+```powershell
+cd harness-v2
+git -C plugins/dsh-topic-trail pull   # 如果是 git clone 的
+# 或重新下载覆盖 lib/
+Copy-Item plugins\dsh-topic-trail\lib\*.js profiles\web\node_modules\dsh-topic-trail\lib\ -Force
+# 重启 dsh
+```
+
+---
+
+## 配置（cordis.patch.yml）
+
+| 配置项 | 默认 | 说明 |
+|---|---|---|
+| `summarize` | `auto` | auto：规则即时生成 + turn 结束后 LLM 总结替换；llm：纯 LLM；rule：纯规则零调用 |
+| `provider` / `model` | 自动 | 留空自动探测 dsh 已配置的 DeepSeek 路由；可显式指定 |
+| `pollMs` | 3000 | 前端刷新间隔（毫秒） |
+| `bufferSize` | 40 | 送入 LLM 总结的最近事件条数上限 |
+
+---
 
 ## 说明与限制
 
-- 话题/步骤 id 基于会话事件序号（seq）生成，LLM 重总结后 id 保持稳定，前端 diff 平滑。
-- 持久化文件位于 `harness-v2/data/topic-trail/`，重启后自动恢复；`buffer`（LLM 输入）不持久化，重启后 LLM 总结基于新的实时事件；长会话导入时 buffer 会**均匀采样**（最多 `bufferSize` 条），让 LLM 看到整体脉络而非只看会话尾部。
-- 导入旧会话时，规则模式基于全部历史事件生成步骤（O(n) 即时完成），LLM 总结基于采样事件精修。
-- LLM 总结失败（未配置模型、网络错误、输出非法 JSON）会静默回退到规则模式，悬浮窗仍能看到实时步骤；错误详情写 `data/topic-trail/llm-error.log`。
-- **LLM 通道**：走 dsh 已配置的 `ctx.llm`（默认 `deepseek-official` + `deepseek-v4-flash`），总结请求关闭思考链（`reasoningEffort: off`）以直接输出；若 web 的 DeepSeek API key 失效，请在「模型设置」重新填写（注意环境变量里不要带多余引号）。
-- 工作区线索按标题相似度合并（bigram Jaccard，规则聚类）；同一会话内相似话题也可合并；工作区/会话来源逐条列出，前端可下钻。
-- 会话下拉默认选中最近有线索的会话；当前活跃会话会随实时事件自动更新。
-- 后续可扩展：话题之间的关联关系（在 LLM 提示词中输出 `links` 并在前端绘制连线）、合并线索的 LLM 级语义聚类。
-- 开发：`lib/` 源码修改后需同步到已安装副本（pnpm 对 `file:` 依赖是复制安装）：
-  ```powershell
-  Copy-Item plugins\dsh-topic-trail\lib\*.js profiles\web\node_modules\dsh-topic-trail\lib\ -Force
-  ```
-  离线自测：`node plugins\dsh-topic-trail\.verify.mjs`（在 `profiles/web/node_modules/dsh-topic-trail/` 下运行）；工作区网络单测：`node plugins\dsh-topic-trail\.test-workspace.mjs`（同上）。
+- 话题/步骤 id 基于会话事件序号生成，LLM 重总结后 id 保持稳定，前端 diff 平滑。
+- LLM 总结失败（未配置模型、网络错误、输出非法 JSON）静默回退规则模式，错误写 `llm-error.log`。
+- 工作区线索按标题相似度合并（bigram Jaccard 聚类）；dsh 的工作区分组从 `localStorage['dsh.workspace.view.v5']` 读取，和 dsh 界面一致。
+- 步骤跳转定位：优先按时间匹配消息，匹配不到时按步骤序号比例滚动，最后兜底底部；dsh 虚拟列表可能导致偶发定位不准。
+- 拖拽合并仅在**会话级**视图可用；合并后的线索锁定（🔒），防止被自动总结覆盖。
+
+---
+
+## 📌 文档维护提醒
+
+**每次新增/修改功能后，请同步更新本 README**，重点检查：
+
+- [ ] 「特色功能」是否新增了条目
+- [ ] 「使用方法」是否有新操作需要说明
+- [ ] 「Host 侧 API」表格是否有新增/变更路由
+- [ ] 「配置」表格是否有新增配置项
+- [ ] 「项目结构」是否有新增文件
+- [ ] 「说明与限制」是否需要补充
+
+模型迭代快，文档和代码不同步会让使用者困惑。改完代码顺手改 README，保持一致。
