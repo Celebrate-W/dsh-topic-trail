@@ -56,6 +56,7 @@
 - **设置页集成**：dsh 设置里新增「任务线索」栏，可开关插件、切换对话时自动跟随、开关学习功能、调整总结方式和刷新间隔
 - **首次自动导入**：第一次打开时后台慢慢加载所有未归档会话的线索，不截断线程
 - **性能优化**：服务端快照缓存 + 前端 localStorage 秒开 + version 跳过重渲染 + 自适应轮询，不卡界面
+- **轻索引 + 步骤按需加载**：快照只带线索元数据与步骤数（`stepCount`），不搬运步骤正文；展开线索时才按页取。真实数据（45 会话 / 15816 步）实测每轮轮询 **4354.9 KB → 112.5 KB（↓97.4%）**，同时让 localStorage 的「刷新秒开」缓存远离配额上限
 
 ---
 
@@ -117,6 +118,8 @@ dsh 设置 → 「任务线索」栏：
 | 总结方式 | auto（规则+LLM）/ llm（纯LLM）/ rule（纯规则，零模型调用） |
 | 刷新间隔 | 前端轮询快照的间隔（毫秒） |
 
+设置保存后**立即生效**（写入 `data/topic-trail/config.json` 并马上作用于事件处理与首启导入），不需要重启 dsh。
+
 ---
 
 ## 项目结构
@@ -151,7 +154,8 @@ GET /plugins/topic-trail/snapshot  ──轮询──►  Client 悬浮窗
 
 | 路由 | 方法 | 说明 |
 |---|---|---|
-| `/plugins/topic-trail/snapshot` | GET | 全部话题/步骤快照 + 工作区线索网络 + version |
+| `/plugins/topic-trail/snapshot` | GET | 全部线索快照（**轻索引**：含 `stepCount`，不含 `steps`）+ 工作区线索网络 + version |
+| `/plugins/topic-trail/steps` | GET | 按需取某条线索的步骤正文（`sessionId`/`topicId`/`offset`/`limit`，单页默认 200、上限 500） |
 | `/plugins/topic-trail/sessions` | GET | 会话列表（含标题/是否有线索） |
 | `/plugins/topic-trail/config` | GET/POST | 读取/更新运行时配置 |
 | `/plugins/topic-trail/import` | POST | 导入旧会话，从日志重建话题 |
@@ -219,6 +223,16 @@ A：拖拽合并仅在**会话级**视图可用，工作区级和全部工作区
 **Q：LLM 总结失败怎么办？**
 A：检查 dsh 的 DeepSeek API key 是否有效（web 页面 → 模型设置）；失败会自动回退规则模式，错误详情写在 `data/topic-trail/llm-error.log`。
 
+**Q：展开线索只看到 200 步？**
+A：步骤是按需分页加载的（快照不携带步骤正文）。点列表末尾的「加载更多」继续取下一页。这样单条 7000+ 步的巨型线索也不会一次渲染几万个节点、把面板拖卡。
+
+**Q：改了「总结方式」要重启才生效吗？**
+A：不需要。运行时配置在插件装载阶段同步读取，且「生效配置」是活视图——设置页保存后立即作用于事件处理与首启导入。（旧版本这里是一次性快照，会让 rule 模式在首启导入时仍然调用模型，已修复。）
+
+**Q：右下角出现「⚠ 工作线索出错了」怎么办？**
+A：先按提示刷新页面。若**刷新后仍然出现**，那就是代码问题，请把控制台里 `[dsh-topic-trail] render error` 后面的堆栈（尤其 `componentStack`）反馈出来。插件自带错误边界：面板渲染出错时只降级成这条提示，不会连线索数据一起消失。
+已知历史问题（已修复）：「折叠 → 只显示小球」这条渲染路径上，步骤按需加载的两个 hook 曾被放在该路径的提前返回之后，导致点「收起」必现 React #300（Rendered fewer hooks than expected）。hook 已移回组件顶部的 hook 区。
+
 ---
 
 ## 说明与限制
@@ -227,6 +241,8 @@ A：检查 dsh 的 DeepSeek API key 是否有效（web 页面 → 模型设置�
 - LLM 总结失败（未配置模型、网络错误、输出非法 JSON）静默回退规则模式
 - 工作区线索按标题相似度合并（bigram Jaccard 聚类）；dsh 的工作区分组从 `localStorage['dsh.workspace.view.v5']` 读取，和 dsh 界面一致
 - 合并后的线索锁定（🔒），防止被自动总结覆盖
+- 快照是「轻索引」：只带线索元数据 + 步骤数；步骤正文由 `/plugins/topic-trail/steps` 按需分页取（单页默认 200、上限 500），前端悬停线索时会预取首页
+- 设置页的改动立即生效：运行时配置（`data/topic-trail/config.json`）在 apply() 阶段同步读取，生效配置以同一对象引用就地刷新，事件热路径与首启导入都立即看到新值
 
 ---
 
