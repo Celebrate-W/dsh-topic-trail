@@ -5,7 +5,13 @@
 #   - llm：强制 LLM 总结
 #   - rule：仅规则模式（不调用模型，零成本）
 # provider / model: 默认固定用 dsh 官方 DeepSeek 路由（与 web 设置一致），留空则自动探测
-# followSession: 切换对话时，任务线索自动跟随到该对话（工作区级 → 该对话所属工作区；对话级 → 该对话）。可在设置页「任务线索」里开关（持久化到 data/topic-trail/config.json）。
+# followSession: 切换对话时，任务线索自动跟随到该对话（工作区级 → 该对话所属工作区；对话级 → 该对话）
+# learnFromModifications: 记录用户手动合并/整理线索的操作，AI 后续总结时参考划分偏好与命名风格
+# enabled: 插件全局开关，关闭后悬浮窗隐藏、停止记录新线索（已有数据保留）
+# eyeAnimation: 收起小球的数字瞳孔追鼠标、忙碌时乱飘、偶尔眨眼；关闭后为静态数字
+# preserveTopics: AI 总结时保留所有已有话题，只追加新话题，话题数只增不减
+# workspaceMemory: AI 记住每个工作区的项目结构和总结规律，首次全看生成，后续增量更新
+# workspaceViewMode: 工作区视图 — merge（相似合并，跨会话相似线索聚成一组）/ bySession（按对话分类，每个对话一张卡）
 - insert:
     - id: dsh-topic-trail
       name: dsh-topic-trail
@@ -16,3 +22,9 @@
         provider: deepseek-official
         model: deepseek-v4-flash
         followSession: true
+        learnFromModifications: true
+        enabled: true
+        eyeAnimation: false
+        preserveTopics: false
+        workspaceMemory: true
+        workspaceViewMode: bySession
