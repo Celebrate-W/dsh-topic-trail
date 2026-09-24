@@ -65,8 +65,8 @@
 ### 方法一：dsh plugin 命令（推荐）
 
 ```powershell
-$env:PATH = "C:\Users\d\.dsh\harness-v2\tools\node_modules\.bin;" + $env:PATH
-$env:DSH_HOME = "C:\Users\d\.dsh\harness-v2"
+$env:PATH = "$env:DSH_HOME\tools\node_modules\.bin;" + $env:PATH
+$env:DSH_HOME = "C:\path\to\your\dsh"   # 换成你自己的 dsh 安装目录
 dsh plugin --profile web add file:C:/path/to/dsh-topic-trail
 ```
 
