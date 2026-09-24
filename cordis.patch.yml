@@ -12,6 +12,10 @@
 # preserveTopics: AI 总结时保留所有已有话题，只追加新话题，话题数只增不减
 # workspaceMemory: AI 记住每个工作区的项目结构和总结规律，首次全看生成，后续增量更新
 # workspaceViewMode: 工作区视图 — merge（相似合并，跨会话相似线索聚成一组）/ bySession（按对话分类，每个对话一张卡）
+# skin: 皮肤 — default（经典蓝球）/ deepseek（DeepSeek 娘）
+# proactiveDisplay: 主动展示，收起时小球定时冒气泡
+#
+# 注意：这些键都会被 apply() 读取；设置页保存的值（data/topic-trail/config.json）会覆盖这里的基线值。
 - insert:
     - id: dsh-topic-trail
       name: dsh-topic-trail
@@ -25,6 +29,8 @@
         learnFromModifications: true
         enabled: true
         eyeAnimation: false
-        preserveTopics: false
+        preserveTopics: true
         workspaceMemory: true
         workspaceViewMode: bySession
+        skin: default
+        proactiveDisplay: true

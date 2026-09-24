@@ -1,6 +1,25 @@
-# 运行时数据（会话线索、配置、LLM 错误日志）——不含任何源码
-data/
+# 依赖与构建产物
+node_modules/
 *.log
-.start-test.ps1
+
+# 运行时数据（含会话标题等隐私，绝不入库）
+data/
+*.json.gz
+topic-trail.bak-*/
+dsh-topic-trail.srcbak-*/
+
+# 本地开发/调试脚本（含本机路径与本地会话 ID）
+.debug-*.mjs
+.check-*.mjs
+.preview-*.mjs
 .test-*.mjs
-.test-*.log
+.start-test.ps1
+.verify*.mjs
+*.tmp
+
+# 编辑器与系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
