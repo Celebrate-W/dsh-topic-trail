@@ -15,6 +15,11 @@ dsh-topic-trail.srcbak-*/
 .test-*.mjs
 .start-test.ps1
 .verify*.mjs
+# 其余以点开头的临时脚本（.selftest / .frontcheck / .skincheck …）
+# 用通配收口，免得新写的调试脚本每加一个就冒进 git status
+.*.mjs
+.*.cjs
+.*.ps1
 *.tmp
 
 # 编辑器与系统
