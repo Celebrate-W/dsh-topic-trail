@@ -13,6 +13,9 @@
 # workspaceMemory: AI 记住每个工作区的项目结构和总结规律，首次全看生成，后续增量更新
 # workspaceViewMode: 工作区视图 — merge（相似合并，跨会话相似线索聚成一组）/ bySession（按对话分类，每个对话一张卡）
 # skin: 皮肤 — default（经典蓝球）/ deepseek（DeepSeek 娘）
+# topicOrder: 线索排序 — llm（AI 组织顺序，默认）/ created（按创建时间倒序，最新在上）
+# ballScale: 收起小球大小倍率 0.6~1.6；bubbleIntervalSec: 气泡间隔秒数 5~300
+# showRemovedItems: 是否展示在 dsh 里已删除的工作区/已归档对话；leanMode: 省 token 的轻简模式
 # proactiveDisplay: 主动展示，收起时小球定时冒气泡
 #
 # 注意：这些键都会被 apply() 读取；设置页保存的值（data/topic-trail/config.json）会覆盖这里的基线值。
@@ -33,4 +36,5 @@
         workspaceMemory: true
         workspaceViewMode: bySession
         skin: default
+        topicOrder: llm
         proactiveDisplay: true

@@ -66,6 +66,7 @@ dsh plugin --profile web add file:C:/path/to/dsh-topic-trail
 | `bubbleIntervalSec` | 主动展示气泡的间隔秒数（`5` ~ `300`，实际有 0.7~1.5 倍随机抖动） | `30` |
 | `showRemovedItems` | 展示在 dsh 里已删除的工作区 / 已归档的对话（默认隐藏） | `false` |
 | `leanMode` | 轻简模式（省 token）：总结间隔拉到 90 秒、不喂推理内容、气泡间隔翻倍 | `false` |
+| `topicOrder` | 线索排序：`llm`（AI 组织顺序）/ `created`（按创建时间倒序，最新在上） | `llm` |
 | `eyeAnimation` | 收起小球跟随鼠标的数字瞳孔、眨眼动画 | `false` |
 | `proactiveDisplay` | 主动展示气泡 | `true` |
 | `enabled` | 插件总开关（关闭后隐藏悬浮窗、停止记录） | `true` |
