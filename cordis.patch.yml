@@ -36,5 +36,9 @@
         workspaceMemory: true
         workspaceViewMode: bySession
         skin: default
-        topicOrder: llm
+        topicOrder: created
+        ballScale: 1
+        bubbleIntervalSec: 30
+        showRemovedItems: false
+        leanMode: false
         proactiveDisplay: true
