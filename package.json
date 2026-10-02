@@ -13,7 +13,9 @@
     "lib",
     "cordis.patch.yml",
     "使用说明.md",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "THIRD-PARTY.md"
   ],
   "keywords": [
     "dsh",

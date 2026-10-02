@@ -109,7 +109,13 @@ dsh plugin --profile web add file:C:/path/to/dsh-topic-trail
 
 ## 许可
 
-MIT
+**代码**采用 [MIT 许可证](./LICENSE)。
+
+**内置的皮肤头像（DeepSeek 娘 / 鲸鱼娘）是社区二创作品，不随 MIT 授权**，版权归各自权利人所有。
+它源自「溟月」（作者：上善无形，以 CC BY-NC-SA 4.0 开放二创），DeepSeek 版由 B 站用户 ZipZipPipe 二次创作。
+使用时请遵循 **署名 / 非商用 / 相同方式共享** 三条要求；商业用途需先取得权利人许可。
+
+详见 [第三方素材说明](./THIRD-PARTY.md)。
 
 ---
 
