@@ -19,15 +19,37 @@
   ],
   "keywords": [
     "dsh",
+    "dsh-plugin",
     "deepseek-harness",
     "plugin",
     "topic",
     "trail",
     "overlay"
   ],
+  "author": "Celebrate-W",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Celebrate-W/dsh-topic-trail.git"
+  },
+  "homepage": "https://github.com/Celebrate-W/dsh-topic-trail#readme",
+  "bugs": {
+    "url": "https://github.com/Celebrate-W/dsh-topic-trail/issues"
+  },
   "engines": {
     "node": ">=20"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-client-runtime": "*",
+    "@deepseek-ai/dsh-llm": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-client-runtime": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    }
   },
   "dsh": {
     "bundle": {
